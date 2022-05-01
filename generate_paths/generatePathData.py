@@ -154,87 +154,98 @@ def main():
     projectDir = ".."
     dataPath = os.path.join(projectDir, "maps")
     mazesDir = os.path.join(dataPath, "mazes" )
-    mazesTrainDir = os.path.join(mazesDir, "train/*.png")
-    mazesValidateDir = os.path.join(mazesDir, "validation/*.png")
-    mazesTestDir = os.path.join(mazesDir, "test/*.png")
-    mazesDirs = [mazesTrainDir,mazesValidateDir, mazesTestDir]
+
 
     saveDataDir = os.path.join(projectDir, "data")
     # Loop through each of the mazes directories (train, validate, test)
-    for mazeD in mazesDirs: 
-        dirName = mazeD.split("/")[-2]
-        print (f"Directory Name: {dirName}")
-        # Loop through all images in directory
-        mazesImgs = sorted(glob.glob(mazeD))
-        print(len(mazesImgs))
-        df = pd.DataFrame(columns = ['Image', 'Start', 'End', 'Path'])
+    mapList = sorted(glob.glob(os.path.join(dataPath,"*")))
+    print(f"map list: {mapList}")
+    for m in mapList:
+        mapTrainDir = os.path.join(m, "train/*.png")
+        mapValidateDir = os.path.join(m, "validation/*.png")
+        mapTestDir = os.path.join(m, "test/*.png")
+        mapTypeDirs = [mapTrainDir,mapValidateDir, mapTestDir]
+        mapDirName = os.path.basename(m)
+        print(f"Map Type: {mapDirName}")
+        # gaps_and_foresets and single_bugtrap has a lot of maps that 
+        # can't be solved, so skip those directories
+        if (mapDirName == "gaps_and_forest") or (mapDirName == "single_bugtrap"):
+            continue
 
-        for imgFile in mazesImgs:
+        for dir in mapTypeDirs: 
+            dirName = dir.split("/")[-2]
+            print (f"Directory Name: {dirName}")
+            # Loop through all images in directory
+            mapImgs = sorted(glob.glob(dir))
+            print(len(mapImgs))
+            df = pd.DataFrame(columns = ['Image', 'Start', 'End', 'Path'])
 
-            # testImg = mazesTrainImgs[0]
-            # imgFile = "../maps/mazes/train/35.png"
-            print(f"image file path {imgFile}")
-            # testImgPath = os.path.join(dataPath, "162.png")
-            img = io.imread(imgFile, as_gray=True)
-            # print(img.shape)
-            # print(img)
-            imgName = imgFile.split("/")[-1]
+            for imgFile in mapImgs:
 
-            # plt.imshow(img,"gray")
-            # plt.show()
-            # df = pd.DataFrame(img)
-            # df.to_csv('imgTest.csv')
+                # testImg = mazesTrainImgs[0]
+                # imgFile = "../maps/mazes/train/35.png"
+                print(f"image file path {imgFile}")
+                # testImgPath = os.path.join(dataPath, "162.png")
+                img = io.imread(imgFile, as_gray=True)
+                # print(img.shape)
+                # print(img)
+                imgName = imgFile.split("/")[-1]
 
-            downImg = transform.resize(img, (32, 32), anti_aliasing=False)
-            # print(downImg.shape)
-            # print(downImg)
+                # plt.imshow(img,"gray")
+                # plt.show()
+                # df = pd.DataFrame(img)
+                # df.to_csv('imgTest.csv')
 
-            # plt.imshow(downImg,"gray")
-            # plt.show()
-            df2 = pd.DataFrame(downImg)
-            df2.to_csv('imgTest2.csv')
-            # Save resized image
-            io.imsave(os.path.join(saveDataDir,"mazes",dirName,imgName), downImg)
+                downImg = transform.resize(img, (32, 32), anti_aliasing=False)
+                # print(downImg.shape)
+                # print(downImg)
 
-            maze = downImg
-            start = (maze.shape[0]-1, 0)
-            end = (0, maze.shape[1]-1)
-            # downImg[start] = 0.5
-            # downImg[end] = 0.5
-            # plt.imshow(downImg,"gray")
-            # plt.show()
-            # print(f"{start}")
-            # print(f"{end}")
-            path = astar(maze, start, end, allow_diagonal_movement = True)
-            print(path)
-            pathImg = np.zeros([32,32,1],dtype=np.uint8)
-            pathImg.fill(255)
-            for p in path:
-                maze[p] = 0.5
-                pathImg[p] = 0.5
+                # plt.imshow(downImg,"gray")
+                # plt.show()
+                # df2 = pd.DataFrame(downImg)
+                # df2.to_csv('imgTest2.csv')
+                # Save resized image
+                io.imsave(os.path.join(saveDataDir,mapDirName,dirName,imgName), downImg)
 
-            # Show combined path and maze image
-            # plt.imshow(maze, "gray")
-            # plt.show()
-            # Save path as separate image
-            io.imsave(os.path.join(saveDataDir,"mazes",dirName+"_path",imgName), pathImg)
+                newImg = downImg
+                start = (newImg.shape[0]-1, 0)
+                end = (0, newImg.shape[1]-1)
+                # downImg[start] = 0.5
+                # downImg[end] = 0.5
+                # plt.imshow(downImg,"gray")
+                # plt.show()
+                # print(f"{start}")
+                # print(f"{end}")
+                path = astar(newImg, start, end, allow_diagonal_movement = True)
+                print(path)
+                pathImg = np.zeros([32,32,1],dtype=np.uint8)
+                pathImg.fill(255)
+                for p in path:
+                    newImg[p] = 0.5
+                    pathImg[p] = 0.5
 
-            # ../maps/mazes/train/149.png
-            print(f"imgName: {imgName}")
-            imgIndex = int(imgName.split('.')[0])
-            print(f"imgIndex: {imgIndex}")
-            # print(f"imgIndex Type: {type(imgIndex)}")
-            # print(f"imgIndex +1: {imgIndex+1}")
+                # Show combined path and maze image
+                # plt.imshow(maze, "gray")
+                # plt.show()
+                # Save path as separate image
+                io.imsave(os.path.join(saveDataDir,mapDirName,dirName+"_path",imgName), pathImg)
 
-            dfRow = pd.DataFrame ([[imgName, start, end, path]], columns = ['Image','Start','End','Path'], index = [int(imgIndex)])
-            df = df.append(dfRow)
-            # df = df.append({"Image": imgName, "Start": str(start), "End": str(end), "Path": str(path), index=imgIndex})
-            # df = df.append({"Image": imgName, "Start": str(start), "End": str(end), "Path": str(path) }, ignore_index=True)
-            # d = {"Image": imgName, "start": str(start), "end": str(end), "path": str(path) }
-            # df = pd.DataFrame(data=d)
+                # ../maps/mazes/train/149.png
+                print(f"imgName: {imgName}")
+                imgIndex = int(imgName.split('.')[0])
+                print(f"imgIndex: {imgIndex}")
+                # print(f"imgIndex Type: {type(imgIndex)}")
+                # print(f"imgIndex +1: {imgIndex+1}")
 
-        df = df.sort_index()
-        df.to_csv(os.path.join(saveDataDir,"mazes",'mazes_{}.csv'.format(dirName)))
+                dfRow = pd.DataFrame ([[imgName, start, end, path]], columns = ['Image','Start','End','Path'], index = [int(imgIndex)])
+                df = df.append(dfRow)
+                # df = df.append({"Image": imgName, "Start": str(start), "End": str(end), "Path": str(path), index=imgIndex})
+                # df = df.append({"Image": imgName, "Start": str(start), "End": str(end), "Path": str(path) }, ignore_index=True)
+                # d = {"Image": imgName, "start": str(start), "end": str(end), "path": str(path) }
+                # df = pd.DataFrame(data=d)
+
+            df = df.sort_index()
+            df.to_csv(os.path.join(saveDataDir,mapDirName,'{}_{}.csv'.format(mapDirName,dirName)))
 
 
 if __name__ == '__main__':
