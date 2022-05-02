@@ -182,40 +182,19 @@ def main():
 
             for imgFile in mapImgs:
 
-                # testImg = mazesTrainImgs[0]
-                # imgFile = "../maps/mazes/train/35.png"
                 print(f"image file path {imgFile}")
-                # testImgPath = os.path.join(dataPath, "162.png")
                 img = io.imread(imgFile, as_gray=True)
-                # print(img.shape)
-                # print(img)
+
                 imgName = imgFile.split("/")[-1]
 
-                # plt.imshow(img,"gray")
-                # plt.show()
-                # df = pd.DataFrame(img)
-                # df.to_csv('imgTest.csv')
-
                 downImg = transform.resize(img, (32, 32), anti_aliasing=False)
-                # print(downImg.shape)
-                # print(downImg)
-
-                # plt.imshow(downImg,"gray")
-                # plt.show()
-                # df2 = pd.DataFrame(downImg)
-                # df2.to_csv('imgTest2.csv')
                 # Save resized image
                 io.imsave(os.path.join(saveDataDir,mapDirName,dirName,imgName), downImg)
 
                 newImg = downImg
                 start = (newImg.shape[0]-1, 0)
                 end = (0, newImg.shape[1]-1)
-                # downImg[start] = 0.5
-                # downImg[end] = 0.5
-                # plt.imshow(downImg,"gray")
-                # plt.show()
-                # print(f"{start}")
-                # print(f"{end}")
+
                 path = astar(newImg, start, end, allow_diagonal_movement = True)
                 print(path)
                 pathImg = np.zeros([32,32,1],dtype=np.uint8)
@@ -227,6 +206,7 @@ def main():
                 # Show combined path and maze image
                 # plt.imshow(maze, "gray")
                 # plt.show()
+
                 # Save path as separate image
                 io.imsave(os.path.join(saveDataDir,mapDirName,dirName+"_path",imgName), pathImg)
 
@@ -234,15 +214,9 @@ def main():
                 print(f"imgName: {imgName}")
                 imgIndex = int(imgName.split('.')[0])
                 print(f"imgIndex: {imgIndex}")
-                # print(f"imgIndex Type: {type(imgIndex)}")
-                # print(f"imgIndex +1: {imgIndex+1}")
 
                 dfRow = pd.DataFrame ([[imgName, start, end, path]], columns = ['Image','Start','End','Path'], index = [int(imgIndex)])
                 df = df.append(dfRow)
-                # df = df.append({"Image": imgName, "Start": str(start), "End": str(end), "Path": str(path), index=imgIndex})
-                # df = df.append({"Image": imgName, "Start": str(start), "End": str(end), "Path": str(path) }, ignore_index=True)
-                # d = {"Image": imgName, "start": str(start), "end": str(end), "path": str(path) }
-                # df = pd.DataFrame(data=d)
 
             df = df.sort_index()
             df.to_csv(os.path.join(saveDataDir,mapDirName,'{}_{}.csv'.format(mapDirName,dirName)))
